@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Barnes & Chickens</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#fafafa; }
+    header { background:#2b6a3f; color:white; padding:15px; display:flex; justify-content:space-between; align-items:center; }
+    .logo { font-size:28px; font-weight:bold; }
+    .cart { cursor:pointer; font-size:18px; }
+    .product-grid { display:flex; flex-wrap:wrap; gap:20px; padding:20px; }
+    .product { background:white; padding:10px; border-radius:6px; width:140px; text-align:center; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.2); }
+    .product img { width:100%; height:auto; border-radius:4px; }
+    .hidden { display:none; }
+    #product-page, #cart-page, #checkout-page { padding:20px; }
+    button { margin:5px; padding:8px 12px; cursor:pointer; border:none; border-radius:4px; background:#2b6a3f; color:white; }
+    button:hover { background:#245634; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 class="logo">BARNES & CHICKENS</h1>
+    <div class="cart" onclick="openCart()">Cart (<span id="cart-count">0</span>)</div>
+  </header>
+
+  <section class="product-grid" id="product-grid"></section>
+
+  <div id="product-page" class="hidden">
+    <h2 id="product-title"></h2>
+    <button onclick="addToCart()">Add to Cart</button>
+    <button onclick="closeProduct()">Back</button>
+  </div>
+
+  <div id="cart-page" class="hidden">
+    <h2>Your Cart</h2>
+    <p id="cart-items">No books in cart yet.</p>
+    <button onclick="checkout()">Checkout</button>
+    <button onclick="closeCart()">Back</button>
+  </div>
+
+  <div id="checkout-page" class="hidden">
+    <h2>Order Confirmed</h2>
+    <p>Thanks for shopping at <b>Barnes & Chickens</b>, you chaotic legend.</p>
+    <button onclick="closeCheckout()">Back to Store</button>
+  </div>
+
+  <script>
+    let cartCount = 0;
+    let currentProduct = "";
+
+    const books = [
+      // Freida McFadden books with ISBNs
+      {title:"The Housemaid", price:"13.99", isbn:"9781538742570"},
+      {title:"The Housemaid’s Secret", price:"14.99", isbn:"9781538742587"},
+      {title:"The Housemaid Is Watching", price:"12.99", isbn:"9781538742594"},
+      {title:"The Surrogate Mother", price:"11.99", isbn:"9781538742600"},
+      {title:"The Crash", price:"15.99", isbn:"9781538742617"},
+      {title:"Never Lie", price:"12.49", isbn:"9781538742624"},
+      {title:"Ward D", price:"14.99", isbn:"9781538742631"},
+      {title:"The Coworker", price:"10.49", isbn:"9781538742648"},
+      {title:"The Coworker’s Revenge", price:"11.49", isbn:"9781538742655"},
+      {title:"The Inmate", price:"12.49", isbn:"9781538742662"},
+      // Extra thriller/mystery books (real titles + ISBN)
+      {title:"Gone Girl", price:"14.99", isbn:"9780307588371"},
+      {title:"The Girl on the Train", price:"13.99", isbn:"9781594634024"},
+      {title:"Before I Go to Sleep", price:"12.99", isbn:"9781455528252"},
+      {title:"The Silent Patient", price:"14.99", isbn:"9781250301697"},
+      {title:"The Woman in the Window", price:"13.49", isbn:"9780425284704"},
+      {title:"Big Little Lies", price:"15.99", isbn:"9780425274866"},
+      {title:"Sharp Objects", price:"14.49", isbn:"9780307341556"},
+      {title:"The Da Vinci Code", price:"14.99", isbn:"9780307474278"},
+      {title:"The Girl with the Dragon Tattoo", price:"16.99", isbn:"9780307949486"}
+    ];
+
+    const grid = document.getElementById("product-grid");
+
+    // Create product elements
+    books.forEach(book => {
+      const div = document.createElement("div");
+      div.className = "product";
+      div.onclick = () => openProduct(book.title);
+
+      const img = document.createElement("img");
+      img.src = "https://via.placeholder.com/140x200";
+      img.alt = book.title;
+      div.appendChild(img);
+
+      const h3 = document.createElement("h3");
+      h3.innerText = book.title;
+      div.appendChild(h3);
+
+      const p = document.createElement("p");
+      p.innerText = `$${book.price}`;
+      div.appendChild(p);
+
+      grid.appendChild(div);
+
+      // Fetch real cover from Google Books API
+      fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${book.isbn}`)
+        .then(res => res.json())
+        .then(data => {
+          if(data.items && data.items[0].volumeInfo.imageLinks){
+            img.src = data.items[0].volumeInfo.imageLinks.thumbnail;
+          }
+        })
+        .catch(err => console.log("Cover fetch error:", err));
+    });
+
+    function openProduct(title) {
+      currentProduct = title;
+      document.getElementById("product-title").innerText = title;
+      grid.classList.add("hidden");
+      document.getElementById("product-page").classList.remove("hidden");
+    }
+
+    function closeProduct() {
+      document.getElementById("product-page").classList.add("hidden");
+      grid.classList.remove("hidden");
+    }
+
+    function addToCart() {
+      cartCount++;
+      document.getElementById("cart-count").innerText = cartCount;
+    }
+
+    function openCart() {
+      document.getElementById("cart-items").innerText =
+        cartCount > 0 ? `${cartCount} item(s) in cart.` : "No books yet, gng.";
+      grid.classList.add("hidden");
+      document.getElementById("product-page").classList.add("hidden");
+      document.getElementById("cart-page").classList.remove("hidden");
+    }
+
+    function closeCart() {
+      document.getElementById("cart-page").classList.add("hidden");
+      grid.classList.remove("hidden");
+    }
+
+    function checkout() {
+      document.getElementById("cart-page").classList.add("hidden");
+      document.getElementById("checkout-page").classList.remove("hidden");
+    }
+
+    function closeCheckout() {
+      document.getElementById("checkout-page").classList.add("hidden");
+      grid.classList.remove("hidden");
+    }
+  </script>
+</body>
+</html>
